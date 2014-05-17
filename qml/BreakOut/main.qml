@@ -34,7 +34,11 @@ Rectangle {
 
 				Rectangle {
 					id: itemRect
-					color: "blue"
+					color: {
+						var yGlobal = mapToItem(grid, x, y).y
+						console.log("y " + yGlobal/root.height)
+						return Qt.hsla(yGlobal/root.height, 1, 0.5, 1)
+					}
 					width: 95
 					height: 20
 
@@ -87,11 +91,25 @@ Rectangle {
 		width: 50/2
 		height: width
 		radius: width/2
+		gradient: Gradient {
+			GradientStop {
+				position: 0.00;
+				color: "#4687e2";
+			}
+			GradientStop {
+				position: 0.01;
+				color: "#afb8ee";
+			}
+			GradientStop {
+				position: 1.00;
+				color: "#071897";
+			}
+		}
 
 		x: player.x + player.width/2
 		y: root.height - 50
 
-		color: "green"
+		color: "black"
 
 		signal checkCollision(var sender, int senderX, int senderY)
 
@@ -136,6 +154,8 @@ Rectangle {
 				xSpeed = 0
 				moveTimer.running = false
 				console.log("GAME OVER")
+
+				resetGame()
 			}
 
 		}
@@ -186,7 +206,7 @@ Rectangle {
 
 		x: parent.height/2
 
-		color: "red"
+		color: "black"
 
 		anchors.bottom: parent.bottom
 		anchors.bottomMargin: root.border.width
@@ -255,7 +275,8 @@ Rectangle {
 			return
 
 		if (event.text == "R"
-				|| event.text == "r") {
+				|| event.text == "r"
+				|| event.key == Qt.Key_Space) {
 			resetGame ()
 			return
 		}
