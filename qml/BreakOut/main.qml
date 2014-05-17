@@ -11,11 +11,6 @@ Rectangle {
 
 	focus: true
 
-    Text {
-        text: qsTr("Hello World")
-        anchors.centerIn: parent
-    }
-
 	Item {
 		id: field
 
@@ -43,6 +38,15 @@ Rectangle {
 					width: 95
 					height: 20
 
+					property int centerX: x + width/2
+					property int centerY: y + height/2
+
+					Rectangle {
+						width: 1
+						height: 1
+						anchors.centerIn: parent
+					}
+
 					Item {
 						id: itemDetector
 						anchors.fill: parent
@@ -53,12 +57,14 @@ Rectangle {
 							onCheckCollision: {
 								if (itemRect.opacity == 0)
 									return
-								var ballOnPlayer = itemDetector.mapFromItem(root, ball.centerX, ball.centerY)
-//								console.log("   ball pos player : " + ballOnPlayer.x + "," + ballOnPlayer.y)
+
+								var ballOnPlayer = itemDetector.mapFromItem(root, senderX, senderY)
+
 								if (itemDetector.contains(Qt.point(ballOnPlayer.x, ballOnPlayer.y))) {
-									ball.ySpeed = -ball.ySpeed
+
+									sender.ySpeed = Math.abs(sender.ySpeed)
+
 									itemRect.opacity = 0.0
-									console.log("collision w item")
 								}
 							}
 						}
@@ -77,19 +83,21 @@ Rectangle {
 
 	Rectangle {
 		id: ball
+
 		width: 50/2
 		height: width
 		radius: width/2
 
-		x: 50
+		x: player.x + player.width/2
 		y: root.height - 50
 
 		color: "green"
 
-		signal checkCollision()
+		signal checkCollision(var sender, int senderX, int senderY)
 
-		property int xSpeed: 10/2
-		property int ySpeed: -10/2
+		property double xSpeed: 10/2
+		property double ySpeed: -10/2
+
 		property int centerX: x + width/2
 		property int centerY: y + height/2
 
@@ -102,6 +110,12 @@ Rectangle {
 				ball.y = root.height - 50
 				moveTimer.running = true
 			}
+		}
+
+		Rectangle {
+			width: 1
+			height: 1
+			anchors.centerIn: parent
 		}
 
 		function step()
@@ -128,24 +142,45 @@ Rectangle {
 
 		function checkCollisions()
 		{
-			var centerPoint = Qt.point(centerX, centerY)
-//			var ballOnRoot = ball.mapToItem(root, centerX, centerY)
-			var ballOnPlayer = playerDetector.mapFromItem(root, centerX, centerY)
-//			console.log("   ball pos player : " + ballOnPlayer.x + "," + ballOnPlayer.y)
-			if (playerDetector.contains(Qt.point(ballOnPlayer.x, ballOnPlayer.y))) {
-				ball.ySpeed = -ball.ySpeed
-				var playerCenterX = player.x + player.width/2
-				var xDiff = (centerX - playerCenterX)
-				ball.xSpeed = xDiff * 2.0 / player.width * 10.0
-				console.log("collision w xDiff = " + xDiff)
-			}
+			ball.checkCollision(ball, centerX, centerY)
+		}
 
-			ball.checkCollision()
+		function hitOn(posX, posY)
+		{
+			console.log("Ball on  " + centerX + " " + centerY)
+			console.log("Hit  on  " + posX + " " + posY)
+			console.log("speed  " + xSpeed + " " + ySpeed)
+
+			var xdiff = centerX - posX
+			var ydiff = posY - centerY
+
+			console.log("diff on  " + xdiff + " " + ydiff)
+
+			// get angle and make correction
+			var theAngle = Math.atan(Math.abs(ydiff) / Math.abs(xdiff))
+			var theAngleGrage = theAngle * 180 / 3.1415
+			if (ydiff < 0)
+				theAngleGrage = -theAngleGrage
+			if (xdiff < 0)
+				theAngleGrage = 180 - theAngleGrage
+
+			var theSpeed = Math.sqrt(Math.pow(xSpeed, 2)
+									 + Math.pow(ySpeed, 2))
+
+			console.log("speed  " + theSpeed)
+			console.log("angle grade " + theAngleGrage)
+
+			ball.ySpeed = -Math.sin(theAngleGrage/180*3.1415) * theSpeed
+			ball.xSpeed = Math.cos(theAngleGrage/180*3.1415) * theSpeed
+
+			console.log("New speed  " + xSpeed + " " + ySpeed)
+			console.log("------------------------------------------------------")
 		}
 	}
 
 	Rectangle {
 		id: player
+
 		width: 100
 		height: 25
 
@@ -156,9 +191,11 @@ Rectangle {
 		anchors.bottom: parent.bottom
 		anchors.bottomMargin: root.border.width
 
-		property int moveDirection: 1
-		property int moveSpeed: 0
-		property int maxSpeed: root.width/moveTimer.interval/4
+		property int moveDirection: 0
+		property int moveSpeed: root.width/moveTimer.interval/4
+
+		property int centerX: x + width/2
+		property int centerY: y + height/2
 
 		MouseArea {
 			anchors.fill: parent
@@ -169,34 +206,33 @@ Rectangle {
 			drag.maximumX: root.width - player.width
 		}
 
+		Rectangle {
+			width: 1
+			height: 1
+			anchors.centerIn: parent
+		}
+
 		Item {
 			id: playerDetector
 			anchors.fill: parent
 			anchors.margins: -ball.width/2
-		}
 
-		Timer {
-			id: playerTimer
-			interval: 100
-			repeat: true
-			onTriggered: {
-				player.moveSpeed = Math.min(player.maxSpeed, player.moveSpeed * 2)
-				console.log("move speed = " + player.moveSpeed)
+			Connections {
+				target: ball
+				onCheckCollision: {
+					var ballOnPlayer = playerDetector.mapFromItem(root, senderX, senderY)
+
+					if (playerDetector.contains(Qt.point(ballOnPlayer.x, ballOnPlayer.y))) {
+						sender.hitOn(player.centerX, player.centerY)
+					}
+				}
 			}
 		}
 
+
 		function step()
 		{
-			console.log("using move speed = " + player.moveSpeed)
-			x = checkBound(x + maxSpeed * moveDirection)
-//			x = checkBound(x + moveSpeed * moveDirection)
-
-		}
-
-		function increaseSpeed()
-		{
-//			player.moveSpeed = Math.min(player.maxSpeed, player.moveSpeed * 2)
-//			console.log("move speed increase to = " + player.moveSpeed + "    while max = " + player.maxSpeed)
+			x = checkBound(x + moveSpeed * moveDirection)
 		}
 
 		function checkBound(x)
@@ -205,40 +241,50 @@ Rectangle {
 		}
 	}
 
-	property int posIncrement: 1
+	function resetGame ()
+	{
+		ball.x = player.x + player.width/2
+		ball.y = player.y - ball.height
+		ball.xSpeed = 5
+		ball.ySpeed = -5
+		moveTimer.running = true
+	}
 
 	Keys.onPressed: {
-		if (event.text == "S" || event.text == "s") {
-			ball.xSpeed = 5
-			ball.ySpeed = -5
-			ball.x = 50
-			ball.y = root.height - 50
-			moveTimer.running = true
+		if (event.isAutoRepeat)
+			return
+
+		if (event.text == "R"
+				|| event.text == "r") {
+			resetGame ()
 			return
 		}
 
-		if (player.moveSpeed == 0 && (event.key == Qt.Key_Left || event.key == Qt.Key_Right)) {
-			player.moveSpeed = 1
-			console.log("Speed reset")
+		if (event.text == "P"
+				|| event.text == "p") {
+			moveTimer.running = !moveTimer.running
+			return
+		}
+
+		if (event.text == "F"
+				|| event.text == "f") {
+			moveTimer.interval = moveTimer.interval / 10
+			return
+		}
+
+		if (event.text == "S"
+				|| event.text == "s") {
+			moveTimer.interval = moveTimer.interval * 10
+			return
 		}
 
 		if (event.key == Qt.Key_Left) {
-			console.log("Left Press")
 			player.moveDirection = -1
-//			player.increaseSpeed()
-			playerTimer.running = true
-//			player.moveSpeed = 1
-//			playerTimer.running = true
 			event.accepted = true
 		}
 
 		if (event.key == Qt.Key_Right) {
-			console.log("Right Press")
 			player.moveDirection = 1
-//			player.increaseSpeed()
-			playerTimer.running = true
-//			player.moveSpeed = 1
-//			playerTimer.running = true
 			event.accepted = true
 		}
 	}
@@ -246,13 +292,27 @@ Rectangle {
 	Keys.onReleased: {
 		if (event.isAutoRepeat)
 			return
-		if (event.key == Qt.Key_Left || event.key == Qt.Key_Right) {
-			console.log("Release  autorepeat = " + event.isAutoRepeat)
-			player.moveSpeed = 0
-			playerTimer.running = false
+
+		if (event.text == "F"
+				|| event.text == "f") {
+			moveTimer.interval = moveTimer.interval * 10
+			return
+		}
+
+		if (event.text == "S"
+				|| event.text == "s") {
+			moveTimer.interval = moveTimer.interval / 10
+			return
+		}
+
+		if (event.key == Qt.Key_Left
+				|| event.key == Qt.Key_Right) {
+			player.moveDirection = 0
 			event.accepted = true
 		}
 	}
+
+	property int fps: 0
 
 	Timer {
 		id: moveTimer
@@ -260,32 +320,22 @@ Rectangle {
 		running: true
 		repeat: true
 
-		onTriggered: {
+		signal step()
 
-			if (player.moveSpeed > 0)
-				player.step()
+		onTriggered: {
+			moveTimer.step()
+
+			player.step()
 
 			ball.step()
 
-			ball.checkCollisions()
+			ball.checkCollision(ball, ball.centerX, ball.centerY)
 		}
-	}
-
-	function mainLoop()
-	{
-		player.step()
-
-		ball.step()
-
-		mainLoop()
 	}
 
 	MouseArea {
 		anchors.fill: parent
 		hoverEnabled: true
-		onMouseXChanged: {
-			var newPlayerPos = mouseX - player.width/2
-			player.x = newPlayerPos
-		}
+		onMouseXChanged: player.x = mouseX - player.width/2
 	}
 }
