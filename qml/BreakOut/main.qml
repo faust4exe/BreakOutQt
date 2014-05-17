@@ -14,14 +14,19 @@ Rectangle {
 	Item {
 		id: field
 
-		width: parent.width
-		height: parent.height/2.0
+		anchors.top: parent.top
+		anchors.left: parent.left
+		anchors.right: parent.right
+		anchors.margins: root.border.width * 2
+
+		height: parent.height * 0.40
 
 		Grid {
 			id: grid
-			property int colWidth: 100
+			property int colWidth: (grid.width+spacing)/colsCount - spacing //100
 			property int rowHeight: 25
-			property int colsCount: grid.width/colWidth
+
+			property int colsCount: 8//grid.width/colWidth
 			property int rowCount: grid.height/rowHeight
 
 			columns: colsCount
@@ -36,14 +41,18 @@ Rectangle {
 					id: itemRect
 					color: {
 						var yGlobal = mapToItem(grid, x, y).y
-						console.log("y " + yGlobal/root.height)
 						return Qt.hsla(yGlobal/root.height, 1, 0.5, 1)
 					}
-					width: 95
-					height: 20
+					width: grid.colWidth
+					height: grid.rowHeight
 
 					property int centerX: x + width/2
 					property int centerY: y + height/2
+
+					property int row: index / grid.colsCount
+					property int column: index % grid.colsCount
+
+					Component.onCompleted: engine.registerItem(itemRect)
 
 					Rectangle {
 						width: 1
@@ -71,6 +80,13 @@ Rectangle {
 									itemRect.opacity = 0.0
 								}
 							}
+						}
+
+						Rectangle {
+							anchors.fill: parent
+							color: "transparent"
+							border.width: 1
+							border.color: "black"
 						}
 					}
 				}
@@ -247,6 +263,13 @@ Rectangle {
 					}
 				}
 			}
+
+			Rectangle {
+				anchors.fill: parent
+				color: "transparent"
+				border.width: 1
+				border.color: "black"
+			}
 		}
 
 
@@ -278,6 +301,12 @@ Rectangle {
 				|| event.text == "r"
 				|| event.key == Qt.Key_Space) {
 			resetGame ()
+			return
+		}
+
+		if (event.text == "X"
+				|| event.text == "x") {
+			engine.start()
 			return
 		}
 
