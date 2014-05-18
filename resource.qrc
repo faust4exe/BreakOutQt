@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/BreakOut/InfoPanel.qml</file>
+        <file>qml/BreakOut/main.qml</file>
+        <file>qml/BreakOut/Wall.qml</file>
+    </qresource>
+</RCC>

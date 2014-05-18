@@ -8,7 +8,11 @@ QML_IMPORT_PATH =
 
 # The .cpp file which was generated for your project. Feel free to hack it.
 SOURCES += main.cpp \
-    GameEngine.cpp
+    GameEngine.cpp \
+    MoveableItem.cpp \
+    MoveableElasticItem.cpp \
+    ElasticItem.cpp \
+    PlayerElasticItem.cpp
 
 # Installation path
 # target.path =
@@ -18,4 +22,11 @@ include(qtquick2applicationviewer/qtquick2applicationviewer.pri)
 qtcAddDeployment()
 
 HEADERS += \
-    GameEngine.h
+    GameEngine.h \
+    MoveableItem.h \
+    MoveableElasticItem.h \
+    ElasticItem.h \
+    PlayerElasticItem.h
+
+RESOURCES += \
+    resource.qrc

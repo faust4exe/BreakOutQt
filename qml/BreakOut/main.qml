@@ -161,81 +161,26 @@ Rectangle {
 
 			speedX: 100*2
 			speedY: -100*2
-
-			property int centerX: x + width/2
-			property int centerY: y + height/2
-
-				/*x += xSpeed
-				y += ySpeed
-
-				if (x <= 0)
-					xSpeed = -xSpeed
-				if (x + ball.width > playfield.width)
-					xSpeed = -xSpeed
-
-				if (y <= 0)
-					ySpeed = -ySpeed
-
-				if (y + ball.height > playfield.height) {
-					ySpeed = 0
-					xSpeed = 0
-					moveTimer.running = false
-					console.log("GAME OVER")
-				}*/
-
-			function hitOn(posX, posY)
-			{
-				var xdiff = centerX - posX
-				var ydiff = posY - centerY
-
-				// get angle and make correction
-				var theAngle = Math.atan(Math.abs(ydiff) / Math.abs(xdiff))
-				var theAngleGrage = theAngle * 180 / 3.1415
-				if (ydiff < 0)
-					theAngleGrage = -theAngleGrage
-				if (xdiff < 0)
-					theAngleGrage = 180 - theAngleGrage
-
-				var theSpeed = Math.sqrt(Math.pow(xSpeed, 2)
-										 + Math.pow(ySpeed, 2))
-
-
-				ball.ySpeed = -Math.sin(theAngleGrage/180*3.1415) * theSpeed
-				ball.xSpeed = Math.cos(theAngleGrage/180*3.1415) * theSpeed
-
-			}
 		}
 
 		MoveableElasticItem {
 			id: player
 
+			x: parent.height/2
 			width: 100
 			height: 25
-
-			x: parent.height/2
-
-			Rectangle {
-				anchors.fill: parent
-				color: "black"
-			}
-
-			Component.onCompleted: engine.registerPlayer(player)
 
 			anchors.bottom: parent.bottom
 			anchors.bottomMargin: playfield.border.width
 
 			property int moveSpeed: 500
 
-			/*
-					onCheckCollision: {
-						Qpoint ballOnPlayer = playerDetector.mapFromItem(playfield, senderX, senderY)
+			Component.onCompleted: engine.registerPlayer(player)
 
-						if (playerDetector.contains(Qt.point(ballOnPlayer.x, ballOnPlayer.y))) {
-							sender.hitOn(player.centerX, player.centerY)
-						}
-					}
-			}*/
-
+			Rectangle {
+				anchors.fill: parent
+				color: "black"
+			}
 		}
 
 		function resetGame ()
@@ -335,7 +280,11 @@ Rectangle {
 		MouseArea {
 			anchors.fill: parent
 			hoverEnabled: true
-			onMouseXChanged: player.x = mouseX - player.width/2
+			onMouseXChanged: {
+				var newPos = mouseX - player.width/2
+				newPos = Math.min(newPos, playfield.width - player.width)
+				player.x = Math.max(0, newPos)
+			}
 		}
 	}
 

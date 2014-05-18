@@ -2,6 +2,9 @@
 
 #include <QDebug>
 
+#include <ElasticItem.h>
+#include <MoveableItem.h>
+#include <MoveableElasticItem.h>
 #include <math.h>
 
 GameEngine::GameEngine(QObject *parent)
@@ -207,9 +210,15 @@ void GameEngine::checkCollisions()
 					ball->setSpeedY(0);
 					ball->setOpacity(0.1);
 				}
-				continue;
+				break;
 			}
+
+			int z = 0;
+			z++;
 		}
+
+		int z1 = 0;
+		z1++;
 	}
 
 	foreach (MoveableItem * ball, m_balls) {
@@ -229,29 +238,43 @@ void GameEngine::checkCollisions()
 				ElasticItem * newActive = 0;
 				newActive = itemAt(row+1, col);
 				if (newActive != 0){
-					m_activeItems.append(newActive);
+					if (!newActive->active())
+						m_activeItems.append(newActive);
 					newActive->setActive(true);
 				}
 				newActive = itemAt(row-1, col);
 				if (newActive != 0){
-					m_activeItems.append(newActive);
+					if (!newActive->active())
+						m_activeItems.append(newActive);
 					newActive->setActive(true);
 				}
 				newActive = itemAt(row, col+1);
 				if (newActive != 0){
-					m_activeItems.append(newActive);
+					if (!newActive->active())
+						m_activeItems.append(newActive);
 					newActive->setActive(true);
 				}
 				newActive = itemAt(row, col-1);
 				if (newActive != 0){
-					m_activeItems.append(newActive);
+					if (!newActive->active())
+						m_activeItems.append(newActive);
 					newActive->setActive(true);
 				}
 
 				onItemHit();
+				break;
 			}
+
+			int z = 0;
+			z++;
 		}
+
+		int z1 = 0;
+		z1++;
 	}
+
+	int z1 = 0;
+	z1++;
 }
 
 void GameEngine::resetActiveItems()
@@ -272,6 +295,7 @@ void GameEngine::onItemHit()
 	// score ++
 	setScore(score()+1);
 
+	qDebug() << "active: " << m_activeItems.count();
 	// check end of game
 	if (m_activeItems.count() == 0) {
 		qDebug() << "GAME WIN";
@@ -293,217 +317,12 @@ ElasticItem *GameEngine::itemAt(int row, int col)
 		return 0;
 
 	int index = col + row * m_colsCount;
-	if (m_allItems.count() > index)
-		return m_allItems.at(index);
-	else
+	if (m_allItems.count() > index) {
+		ElasticItem * item = m_allItems.at(index);
+		if (item->opacity() == 0)
+			return 0;
+		return item;
+	} else
 		return 0;
 }
 
-////////////////////////////////////////////////////////////
-
-MoveableItem::MoveableItem(QQuickItem *parent)
-	: QQuickItem(parent)
-	, m_speedX(0)
-	, m_speedY(0)
-{
-
-}
-
-MoveableItem::~MoveableItem()
-{
-
-}
-
-void MoveableItem::step(double msecs)
-{
-	qreal newX = speedX() * msecs/1000.0 + x();
-	qreal newY = speedY() * msecs/1000.0 + y();
-
-	setX(newX);
-	setY(newY);
-}
-
-double MoveableItem::speedX() const
-{
-	return m_speedX;
-}
-
-double MoveableItem::speedY() const
-{
-	return m_speedY;
-}
-
-QPoint MoveableItem::centerPoint() const
-{
-	return QPoint(x() + width()/2,
-				  y() + height()/2);
-}
-
-void MoveableItem::setSpeedX(double arg)
-{
-	if (m_speedX != arg) {
-		m_speedX = arg;
-		emit speedXChanged(arg);
-	}
-}
-
-void MoveableItem::setSpeedY(double arg)
-{
-	if (m_speedY != arg) {
-		m_speedY = arg;
-		emit speedYChanged(arg);
-	}
-}
-
-//////////////////////////////////////////////////////////
-
-ElasticItem::ElasticItem(QQuickItem *parent)
-	: QQuickItem(parent)
-	, m_active(false)
-	, m_isDeadly(false)
-{
-
-}
-
-ElasticItem::~ElasticItem()
-{
-
-}
-
-bool ElasticItem::checkCollision(MoveableItem *item)
-{
-	if (opacity() == 0)
-		return false;
-
-	QPoint ballCenter = item->centerPoint();
-	QPoint mappedCenter = mapFromItem(item->parentItem(), ballCenter).toPoint();
-	ballCenter = mappedCenter;
-
-	if (topSensor(item->width()/2).contains(ballCenter, true)) {
-		item->setSpeedY(-fabs(item->speedY()));
-		return true;
-	}
-	if (bottomSensor(item->width()/2).contains(ballCenter, true)) {
-		item->setSpeedY(fabs(item->speedY()));
-		return true;
-	}
-	if (leftSensor(item->width()/2).contains(ballCenter, true)) {
-		item->setSpeedX(-fabs(item->speedX()));
-		return true;
-	}
-	if (rightSensor(item->width()/2).contains(ballCenter, true)) {
-		item->setSpeedX(fabs(item->speedX()));
-		return true;
-	}
-
-	if (topLeftSensor(item->width()/2).contains(ballCenter, true)) {
-		item->setSpeedX(-fabs(item->speedX()));
-		item->setSpeedY(-fabs(item->speedY()));
-		return true;
-	}
-	if (topRightSensor(item->width()/2).contains(ballCenter, true)) {
-		item->setSpeedX(fabs(item->speedX()));
-		item->setSpeedY(-fabs(item->speedY()));
-		return true;
-	}
-
-	if (bottomLeftSensor(item->width()/2).contains(ballCenter, true)) {
-		item->setSpeedX(-fabs(item->speedX()));
-		item->setSpeedY(fabs(item->speedY()));
-		return true;
-	}
-	if (bottomRightSensor(item->width()/2).contains(ballCenter, true)) {
-		item->setSpeedX(fabs(item->speedX()));
-		item->setSpeedY(fabs(item->speedY()));
-		return true;
-	}
-
-	return false;
-}
-
-QRect ElasticItem::topSensor(int depth)
-{
-	return QRect(0,
-				 0 - depth,
-				 width(),
-				 depth);
-}
-
-QRect ElasticItem::topLeftSensor(int depth)
-{
-	return QRect(0 - depth,
-				 0 - depth,
-				 depth,
-				 depth);
-}
-
-QRect ElasticItem::topRightSensor(int depth)
-{
-	return QRect(0 + width(),
-				 0 - depth,
-				 depth,
-				 depth);
-}
-
-QRect ElasticItem::bottomSensor(int depth)
-{
-	return QRect(0,
-				 0+height(),
-				 width(),
-				 depth);
-}
-
-QRect ElasticItem::bottomLeftSensor(int depth)
-{
-	return QRect(0-depth,
-				 0+height(),
-				 depth,
-				 depth);
-}
-
-QRect ElasticItem::bottomRightSensor(int depth)
-{
-	return QRect(0+width(),
-				 0+height(),
-				 depth,
-				 depth);
-}
-
-QRect ElasticItem::leftSensor(int depth)
-{
-	return QRect(0-depth,
-				 0,
-				 depth,
-				 height());
-}
-
-QRect ElasticItem::rightSensor(int depth)
-{
-	return QRect(0+width(),
-				 0,
-				 depth,
-				 height());
-}
-
-////////////////////////////////////////////
-
-MoveableElasticItem::MoveableElasticItem(QQuickItem *parent)
-	: MoveableItem(parent)
-{
-
-}
-
-MoveableElasticItem::~MoveableElasticItem()
-{
-
-}
-
-bool MoveableElasticItem::checkCollision(MoveableItem *item)
-{
-	m_elasticComponent.setX(x());
-	m_elasticComponent.setY(y());
-	m_elasticComponent.setWidth(width());
-	m_elasticComponent.setHeight(height());
-
-	return m_elasticComponent.checkCollision(item);
-}
