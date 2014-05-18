@@ -79,8 +79,17 @@ public slots:
 
 signals:
 	void activeChanged(bool arg);
-
 	void isDeadlyChanged(bool arg);
+
+private:
+	QRect topSensor(int depth);
+	QRect topLeftSensor(int depth);
+	QRect topRightSensor(int depth);
+	QRect bottomSensor(int depth);
+	QRect bottomLeftSensor(int depth);
+	QRect bottomRightSensor(int depth);
+	QRect leftSensor(int depth);
+	QRect rightSensor(int depth);
 
 private:
 	bool m_active;

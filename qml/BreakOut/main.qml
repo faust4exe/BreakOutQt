@@ -258,6 +258,18 @@ Rectangle {
 				return
 			}
 
+			if (event.key == Qt.Key_Plus) {
+				ball.speedX = ball.speedX * 1.25
+				ball.speedY = ball.speedY * 1.25
+				return
+			}
+
+			if (event.key == Qt.Key_Minus) {
+				ball.speedX = ball.speedX / 1.25
+				ball.speedY = ball.speedY / 1.25
+				return
+			}
+
 			if (event.key == Qt.Key_Space) {
 				ball.opacity = 1.0
 				ball.x = player.x + player.width/2
@@ -327,36 +339,12 @@ Rectangle {
 		}
 	}
 
-	Rectangle {
+	InfoPanel {
 		id: infoPanel
+
 		height: parent.height
 		width: 250
 
 		anchors.right: parent.right
-
-		Column {
-			spacing: 5
-			anchors.fill: parent
-			anchors.margins: 5
-			Text {
-				text: "fps:   " + engine.fpsCount
-			}
-			Text {
-				text: "mfps:   " + engine.mediumFSP
-			}
-			Text {
-				text: "frames: " + engine.frames
-			}
-			Text {
-				text: "score: " + engine.score
-			}
-
-			Item { width: 50; height: 50}
-			Text { text: "Instructions: " }
-			Text { text: "Space to start" }
-			Text { text: "R to restart game" }
-			Text { text: "P to pause game" }
-		}
 	}
-
 }

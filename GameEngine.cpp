@@ -142,7 +142,7 @@ void GameEngine::setFpsLimit(int arg)
 
 void GameEngine::onTimer()
 {
-	qDebug() << "time : " << QTime::currentTime();
+//	qDebug() << "time : " << QTime::currentTime();
 	int msecs = calculateFPS();
 
 	if (msecs > 1000) {
@@ -191,6 +191,10 @@ void GameEngine::moveObjects(int msecs)
 
 void GameEngine::checkCollisions()
 {
+	m_player->setX(qMax(0, (int)m_player->x()));
+	m_player->setX(qMin((int)m_player->parentItem()->width() - (int)m_player->width(),
+						(int)m_player->x()));
+
 	foreach (MoveableItem * ball, m_balls) {
 		if (m_player->checkCollision(ball))
 			continue;
@@ -371,53 +375,114 @@ bool ElasticItem::checkCollision(MoveableItem *item)
 	if (opacity() == 0)
 		return false;
 
-	QRect r = QRect(0, 0,
-					width(),
-					height());
-
-	QRect topZone = r.adjusted(0,
-							   -item->width()/2,
-							   0,
-							   -item->width()/2);
-
-	QRect bottomZone = r.adjusted(0,
-								  item->width()/2,
-								  0,
-								  item->width()/2);
-
-	QRect leftZone = r.adjusted(-item->width()/2,
-								0,
-								-item->width()/2,
-								0);
-
-	QRect rightZone = r.adjusted(item->width()/2,
-								 0,
-								 item->width()/2,
-								 0);
-
 	QPoint ballCenter = item->centerPoint();
 	QPoint mappedCenter = mapFromItem(item->parentItem(), ballCenter).toPoint();
 	ballCenter = mappedCenter;
 
-	if (topZone.contains(ballCenter, true)) {
+	if (topSensor(item->width()/2).contains(ballCenter, true)) {
 		item->setSpeedY(-fabs(item->speedY()));
 		return true;
 	}
-	if (bottomZone.contains(ballCenter, true)) {
+	if (bottomSensor(item->width()/2).contains(ballCenter, true)) {
 		item->setSpeedY(fabs(item->speedY()));
 		return true;
 	}
-	if (leftZone.contains(ballCenter, true)) {
+	if (leftSensor(item->width()/2).contains(ballCenter, true)) {
 		item->setSpeedX(-fabs(item->speedX()));
 		return true;
 	}
-	if (rightZone.contains(ballCenter, true)) {
-//		qDebug() << "ball on right";
+	if (rightSensor(item->width()/2).contains(ballCenter, true)) {
 		item->setSpeedX(fabs(item->speedX()));
 		return true;
 	}
 
+	if (topLeftSensor(item->width()/2).contains(ballCenter, true)) {
+		item->setSpeedX(-fabs(item->speedX()));
+		item->setSpeedY(-fabs(item->speedY()));
+		return true;
+	}
+	if (topRightSensor(item->width()/2).contains(ballCenter, true)) {
+		item->setSpeedX(fabs(item->speedX()));
+		item->setSpeedY(-fabs(item->speedY()));
+		return true;
+	}
+
+	if (bottomLeftSensor(item->width()/2).contains(ballCenter, true)) {
+		item->setSpeedX(-fabs(item->speedX()));
+		item->setSpeedY(fabs(item->speedY()));
+		return true;
+	}
+	if (bottomRightSensor(item->width()/2).contains(ballCenter, true)) {
+		item->setSpeedX(fabs(item->speedX()));
+		item->setSpeedY(fabs(item->speedY()));
+		return true;
+	}
+
 	return false;
+}
+
+QRect ElasticItem::topSensor(int depth)
+{
+	return QRect(0,
+				 0 - depth,
+				 width(),
+				 depth);
+}
+
+QRect ElasticItem::topLeftSensor(int depth)
+{
+	return QRect(0 - depth,
+				 0 - depth,
+				 depth,
+				 depth);
+}
+
+QRect ElasticItem::topRightSensor(int depth)
+{
+	return QRect(0 + width(),
+				 0 - depth,
+				 depth,
+				 depth);
+}
+
+QRect ElasticItem::bottomSensor(int depth)
+{
+	return QRect(0,
+				 0+height(),
+				 width(),
+				 depth);
+}
+
+QRect ElasticItem::bottomLeftSensor(int depth)
+{
+	return QRect(0-depth,
+				 0+height(),
+				 depth,
+				 depth);
+}
+
+QRect ElasticItem::bottomRightSensor(int depth)
+{
+	return QRect(0+width(),
+				 0+height(),
+				 depth,
+				 depth);
+}
+
+QRect ElasticItem::leftSensor(int depth)
+{
+	return QRect(0-depth,
+				 0,
+				 depth,
+				 height());
+}
+
+QRect ElasticItem::rightSensor(int depth)
+{
+	return QRect(0+width(),
+				 0,
+				 depth,
+				 height());
 }
 
 ////////////////////////////////////////////
