@@ -41,44 +41,26 @@ class ElasticItem : public QQuickItem
 {
 	Q_OBJECT
 
-	Q_PROPERTY(int offsetX READ offsetX WRITE setOffsetX NOTIFY offsetXChanged)
-	Q_PROPERTY(int offsetY READ offsetY WRITE setOffsetY NOTIFY offsetYChanged)
 	Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
+	Q_PROPERTY(bool isDeadly READ isDeadly WRITE setIsDeadly NOTIFY isDeadlyChanged)
+
 public:
 	ElasticItem(QQuickItem *parent = 0);
 	virtual ~ElasticItem();
 
 	bool checkCollision(MoveableItem * item);
-	int offsetX() const
-	{
-		return m_offsetX;
-	}
-	int offsetY() const
-	{
-		return m_offsetY;
-	}
 
 	bool active() const
 	{
 		return m_active;
 	}
 
-public slots:
-	void setOffsetX(int arg)
+	bool isDeadly() const
 	{
-		if (m_offsetX != arg) {
-			m_offsetX = arg;
-			emit offsetXChanged(arg);
-		}
-	}
-	void setOffsetY(int arg)
-	{
-		if (m_offsetY != arg) {
-			m_offsetY = arg;
-			emit offsetYChanged(arg);
-		}
+		return m_isDeadly;
 	}
 
+public slots:
 	void setActive(bool arg)
 	{
 		if (m_active != arg) {
@@ -87,16 +69,22 @@ public slots:
 		}
 	}
 
-signals:
-	void offsetXChanged(int arg);
-	void offsetYChanged(int arg);
+	void setIsDeadly(bool arg)
+	{
+		if (m_isDeadly != arg) {
+			m_isDeadly = arg;
+			emit isDeadlyChanged(arg);
+		}
+	}
 
+signals:
 	void activeChanged(bool arg);
 
+	void isDeadlyChanged(bool arg);
+
 private:
-	int m_offsetX;
-	int m_offsetY;
 	bool m_active;
+	bool m_isDeadly;
 };
 
 class MoveableElasticItem : public MoveableItem//, public ElasticItem
@@ -106,7 +94,7 @@ public:
 	MoveableElasticItem(QQuickItem *parent = 0);
 	virtual ~MoveableElasticItem();
 
-	void checkCollision(MoveableItem * item);
+	bool checkCollision(MoveableItem * item);
 
 private:
 	ElasticItem m_elasticComponent;
@@ -121,7 +109,7 @@ class GameEngine : public QObject
 	Q_PROPERTY(float fpsCount READ fpsCount WRITE setFpsCount NOTIFY fpsCountChanged)
 	Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
 	Q_PROPERTY(int score READ score WRITE setScore NOTIFY scoreChanged)
-
+	Q_PROPERTY(int fpsLimit READ fpsLimit WRITE setFpsLimit NOTIFY fpsLimitChanged)
 public:
 	explicit GameEngine(QObject *parent);
 	virtual ~GameEngine();
@@ -139,9 +127,6 @@ public:
 	Q_INVOKABLE void registerBall(MoveableItem * item);
 
 	Q_INVOKABLE void registerPlayer(MoveableElasticItem * item);
-//	Q_INVOKABLE void registerPlayer(ElasticItem * item);
-
-//	Q_INVOKABLE void registerPlayfield(QQuickItem * item);
 
 	Q_INVOKABLE void setColumnsCount(int arg);
 	Q_INVOKABLE void setRowsCount(int arg);
@@ -161,6 +146,11 @@ public:
 		return m_score;
 	}
 
+	int fpsLimit() const
+	{
+		return m_fpsLimit;
+	}
+
 public slots:
 	void setFpsCount(float arg);
 
@@ -171,6 +161,7 @@ public slots:
 		if (m_frames != arg) {
 			m_frames = arg;
 			emit framesChanged(arg);
+
 		}
 	}
 
@@ -190,6 +181,8 @@ public slots:
 		}
 	}
 
+	void setFpsLimit(int arg);
+
 signals:
 	void fpsCountChanged(float arg);
 
@@ -201,12 +194,12 @@ signals:
 
 	void scoreChanged(int arg);
 
+	void fpsLimitChanged(int arg);
+
 private slots:
 	void onTimer();
 
 private:
-	void mainLoop();
-
 	int calculateFPS();
 
 	void moveObjects(int msecs);
@@ -242,6 +235,7 @@ private:
 	int m_frames;
 	int m_mediumFSP;
 	int m_score;
+	int m_fpsLimit;
 };
 
 #endif // GAMEENGINE_H

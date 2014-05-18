@@ -13,14 +13,14 @@ GameEngine::GameEngine(QObject *parent)
 	, m_rowsCount(0)
 	, m_colsCount(0)
 	, m_player(0)
-//	, m_playfield(0)
 	, m_frames(0)
 	, m_mediumFSP(60)
 	, m_score(0)
+	, m_fpsLimit(60)
 {
 	qDebug() << Q_FUNC_INFO;
 
-	m_timer.setInterval(1000/m_mediumFSP);
+	m_timer.setInterval(1000/m_fpsLimit);
 	m_timer.setSingleShot(false);
 	connect(&m_timer, SIGNAL(timeout()),
 			SLOT(onTimer()));
@@ -53,23 +53,13 @@ void GameEngine::stop()
 
 void GameEngine::registerItem(ElasticItem *item)
 {
-//	qDebug() << "-----------------------";
-//	qDebug() << "Got Item";
-//	qDebug() << "height : " << item->height();
-//	qDebug() << "width : " << item->width();
-
-//	if (m_playfield)
-//		item->setParentItem(m_playfield);
-
 	const int row = item->property("row").toInt();
-	const int col = item->property("column").toInt();
-//	qDebug() << "pos (r,c) : " << row << "," << col;
 
 	m_allItems.append(item);
+
 	if (row == m_rowsCount - 1) {
 		m_activeItems.append(item);
 		item->setActive(true);
-//		qDebug() << "ACTIVE Item pos (r,c) : " << row << "," << col;
 	}
 }
 
@@ -80,8 +70,6 @@ void GameEngine::registerWall(ElasticItem *item)
 
 void GameEngine::registerBall(MoveableItem *item)
 {
-	int xv = item->x();
-	int yv = item->y();
 	m_balls.append(item);
 }
 
@@ -90,35 +78,12 @@ void GameEngine::registerPlayer(MoveableElasticItem *item)
 	m_player = item;
 }
 
-//void GameEngine::registerPlayfield(QQuickItem *item)
-//{
-//	m_playfield = item;
-
-//	foreach (ElasticItem * item, m_allItems) {
-//		QPointF oldPos = item->mapToScene(item->position());
-//		QPointF newPosition = m_playfield->mapFromScene(oldPos);
-
-////		item->setParentItem(m_playfield);
-////		item->setPosition(newPosition);
-//	}
-//}
-
-//void GameEngine::registerPlayer(ElasticItem *item)
-//{
-//	m_playerElastic = item;
-//}
-
 void GameEngine::setColumnsCount(int arg)
 {
 	if (m_colsCount == arg)
 		return;
 
-	qDebug() << "new cols count = " << arg;
-
 	m_colsCount = arg;
-
-//	if (m_colsCount > 0 && m_rowsCount > 0)
-//		resetActiveItems();
 }
 
 void GameEngine::setRowsCount(int arg)
@@ -126,12 +91,7 @@ void GameEngine::setRowsCount(int arg)
 	if (m_rowsCount == arg)
 		return;
 
-	qDebug() << "new rowss count = " << arg;
-
 	m_rowsCount = arg;
-
-//	if (m_colsCount > 0 && m_rowsCount > 0)
-//		resetActiveItems();
 }
 
 void GameEngine::setFpsCount(float arg)
@@ -140,7 +100,6 @@ void GameEngine::setFpsCount(float arg)
 		m_fpsCount = arg;
 		emit fpsCountChanged(arg);
 
-//		qDebug() << "fps = " << arg;
 	}
 }
 
@@ -157,6 +116,18 @@ void GameEngine::setRunning(bool arg)
 	}
 }
 
+void GameEngine::setFpsLimit(int arg)
+{
+	if (m_fpsLimit != arg) {
+		m_fpsLimit = arg;
+		emit fpsLimitChanged(arg);
+
+		m_timer.setInterval(1000/m_fpsLimit);
+
+		qDebug() << "FPS limit : " << m_fpsLimit;
+	}
+}
+
 void GameEngine::onTimer()
 {
 	int msecs = calculateFPS();
@@ -169,16 +140,6 @@ void GameEngine::onTimer()
 	moveObjects(msecs);
 
 	checkCollisions();
-}
-
-void GameEngine::mainLoop()
-{
-	while (m_running) {
-		calculateFPS();
-
-
-		qDebug() << Q_FUNC_INFO;
-	}
 }
 
 int GameEngine::calculateFPS()
@@ -212,81 +173,20 @@ void GameEngine::moveObjects(int msecs)
 void GameEngine::checkCollisions()
 {
 	foreach (MoveableItem * ball, m_balls) {
-//		QPoint p = ball->centerPoint();
 
-
-//		QRect pr = QRect(m_player->x(),
-//						 m_player->y(),
-//						 m_player->width(),
-//						 m_player->height());
-
-
-//		if (pr.adjusted(-ball->width()/2,
-//					   -ball->width()/2,
-//					   ball->width()/2,
-//					   ball->width()/2).contains(p, true)) {
-//			qDebug() << "ball on Player ";
-			m_player->checkCollision(ball);
-//		}// else
-//			qDebug() << "p: " << p << " playerr: " << pr ;
+		if (m_player->checkCollision(ball))
+			continue;
 
 		foreach (ElasticItem * wall, m_walls) {
-
-
-//			QRect r = QRect(wall->x(), wall->y(),
-//							wall->width(),
-//							wall->height());
-
-			/*QRect topZone = r.adjusted(0,
-									   -ball->width()/2,
-									   0,
-									   -ball->width()/2);
-
-			QRect bottomZone = r.adjusted(0,
-										  ball->width()/2,
-										  0,
-										  ball->width()/2);
-
-			QRect leftZone = r.adjusted(-ball->width()/2,
-										0,
-										-ball->width()/2,
-										0);
-
-			QRect rightZone = r.adjusted(ball->width()/2,
-										 0,
-										 ball->width()/2,
-										 0);*/
-
-//			qDebug() << "p: " << p << " r: " << r ;
-//			if (r.adjusted(-ball->width()/2,
-//						   -ball->width()/2,
-//						   ball->width()/2,
-//						   ball->width()/2).contains(p, true)) {
-//				qDebug() << "ball on wall ";
-				if (wall->checkCollision(ball)) {
-//					if (wall->metaObject()->indexOfMethod("onHit") > -1)
-						QMetaObject::invokeMethod(wall,
-											  "onHit");
+			if (wall->checkCollision(ball)) {
+				// here logic of hit
+				if (wall->isDeadly()) {
+					ball->setSpeedX(0);
+					ball->setSpeedY(0);
+					ball->setOpacity(0.1);
 				}
-
-//			} //else
-//				qDebug() << "p: " << p << " r: " << r ;
-			/*if (topZone.contains(p, true)) {
-				qDebug() << "ball on TOP ";
-				ball->setSpeedY(-fabs(ball->speedY()));
+				continue;
 			}
-			if (bottomZone.contains(p, true)) {
-				qDebug() << "ball on bottom ";
-				ball->setSpeedY(fabs(ball->speedY()));
-			}
-			if (leftZone.contains(p, true)) {
-				qDebug() << "ball on left";
-				ball->setSpeedX(-fabs(ball->speedX()));
-			}
-			if (rightZone.contains(p, true)) {
-				qDebug() << "ball on right";
-				ball->setSpeedX(fabs(ball->speedX()));
-			}*/
 		}
 	}
 
@@ -295,63 +195,39 @@ void GameEngine::checkCollisions()
 			const int row = item->property("row").toInt();
 			const int col = item->property("column").toInt();
 
-//			QPoint p = ball->centerPoint();
-//			QRect r = QRect(item->x(),
-//							item->y(),
-//							item->width(),
-//							item->height());
+			if (item->checkCollision(ball)) {
 
-//			QRect mr = item->mapRectToItem(m_playfield, QRectF(r)).toRect();
+				// hide current
+				item->setOpacity(0.0);
 
-//			if (r.adjusted(-ball->width()/2,
-//						   -ball->width()/2,
-//						   ball->width()/2,
-//						   ball->width()/2).contains(p, true)) {
-//				qDebug() << "ball on ITEM ";
-				if (item->checkCollision(ball)) {
+				// remove from active
+				m_activeItems.removeAll(item);
 
-					// hide current
-					item->setOpacity(0.0);
-
-					// remove from active
-					m_activeItems.removeAll(item);
-
-					// add neighbors to list
-					ElasticItem * newActive = 0;
-					newActive = itemAt(row+1, col);
-					if (newActive != 0){
-						m_activeItems.append(newActive);
-						newActive->setActive(true);
-					}
-					newActive = itemAt(row-1, col);
-					if (newActive != 0){
-						m_activeItems.append(newActive);
-						newActive->setActive(true);
-					}
-					newActive = itemAt(row, col+1);
-					if (newActive != 0){
-						m_activeItems.append(newActive);
-						newActive->setActive(true);
-					}
-					newActive = itemAt(row, col-1);
-					if (newActive != 0){
-						m_activeItems.append(newActive);
-						newActive->setActive(true);
-					}
-
-					onItemHit();
+				// add neighbors to list
+				ElasticItem * newActive = 0;
+				newActive = itemAt(row+1, col);
+				if (newActive != 0){
+					m_activeItems.append(newActive);
+					newActive->setActive(true);
+				}
+				newActive = itemAt(row-1, col);
+				if (newActive != 0){
+					m_activeItems.append(newActive);
+					newActive->setActive(true);
+				}
+				newActive = itemAt(row, col+1);
+				if (newActive != 0){
+					m_activeItems.append(newActive);
+					newActive->setActive(true);
+				}
+				newActive = itemAt(row, col-1);
+				if (newActive != 0){
+					m_activeItems.append(newActive);
+					newActive->setActive(true);
 				}
 
-//			} else {
-//				if (mr.adjusted(-ball->width()/2,
-//							   -ball->width()/2,
-//							   ball->width()/2,
-//							   ball->width()/2).contains(p, true)) {
-////					qDebug() << "ball on Mapped Item ";
-////					item->checkCollision(ball);
-//				}
-//			}
-//			qDebug() << "p: " << p << " r: " << r ;
+				onItemHit();
+			}
 		}
 	}
 }
@@ -436,10 +312,6 @@ double MoveableItem::speedY() const
 
 QPoint MoveableItem::centerPoint() const
 {
-	int xv = x();
-	int yv = y();
-	int wv = width();
-	int hv = height();
 	return QPoint(x() + width()/2,
 				  y() + height()/2);
 }
@@ -464,9 +336,8 @@ void MoveableItem::setSpeedY(double arg)
 
 ElasticItem::ElasticItem(QQuickItem *parent)
 	: QQuickItem(parent)
-	, m_offsetX(0)
-	, m_offsetY(0)
 	, m_active(false)
+	, m_isDeadly(false)
 {
 
 }
@@ -481,8 +352,7 @@ bool ElasticItem::checkCollision(MoveableItem *item)
 	if (opacity() == 0)
 		return false;
 
-	QRect r = QRect(0, //x() + offsetX(),
-					0, //y() + offsetY(),
+	QRect r = QRect(0, 0,
 					width(),
 					height());
 
@@ -511,34 +381,24 @@ bool ElasticItem::checkCollision(MoveableItem *item)
 	ballCenter = mappedCenter;
 
 	if (topZone.contains(ballCenter, true)) {
-//		qDebug() << "ball on TOP ";
 		item->setSpeedY(-fabs(item->speedY()));
-//		QMetaObject::invokeMethod(this, "test");
 		return true;
 	}
 	if (bottomZone.contains(ballCenter, true)) {
-//		qDebug() << "ball on bottom ";
 		item->setSpeedY(fabs(item->speedY()));
-//		QMetaObject::invokeMethod(this, "test");
 		return true;
 	}
 	if (leftZone.contains(ballCenter, true)) {
-//		qDebug() << "ball on left";
 		item->setSpeedX(-fabs(item->speedX()));
-//		QMetaObject::invokeMethod(this, "test");
 		return true;
 	}
 	if (rightZone.contains(ballCenter, true)) {
 //		qDebug() << "ball on right";
 		item->setSpeedX(fabs(item->speedX()));
-//		QMetaObject::invokeMethod(this, "test");
 		return true;
 	}
 
 	return false;
-
-
-//	metaObject()->invokeMethod("test");
 }
 
 ////////////////////////////////////////////
@@ -554,12 +414,12 @@ MoveableElasticItem::~MoveableElasticItem()
 
 }
 
-void MoveableElasticItem::checkCollision(MoveableItem *item)
+bool MoveableElasticItem::checkCollision(MoveableItem *item)
 {
 	m_elasticComponent.setX(x());
 	m_elasticComponent.setY(y());
 	m_elasticComponent.setWidth(width());
 	m_elasticComponent.setHeight(height());
 
-	m_elasticComponent.checkCollision(item);
+	return m_elasticComponent.checkCollision(item);
 }
