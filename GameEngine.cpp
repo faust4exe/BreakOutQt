@@ -18,8 +18,6 @@ GameEngine::GameEngine(QObject *parent)
 	, m_score(0)
 	, m_fpsLimit(60)
 {
-	qDebug() << Q_FUNC_INFO;
-
 	m_timer.setInterval(1000/m_fpsLimit);
 	m_timer.setSingleShot(false);
 	connect(&m_timer, SIGNAL(timeout()),
@@ -41,14 +39,28 @@ bool GameEngine::running() const
 	return m_running;
 }
 
-void GameEngine::start()
+void GameEngine::start(bool forse)
 {
+	if (forse)
+		setRunning(false);
 	setRunning(true);
 }
 
-void GameEngine::stop()
+void GameEngine::stop(bool forse)
 {
+	if (forse)
+		setRunning(true);
 	setRunning(false);
+}
+
+void GameEngine::restartGame()
+{
+	foreach (ElasticItem * item, m_allItems) {
+		item->setOpacity(1.0);
+		item->setActive(false);
+	}
+
+	resetActiveItems();
 }
 
 void GameEngine::registerItem(ElasticItem *item)
@@ -130,6 +142,7 @@ void GameEngine::setFpsLimit(int arg)
 
 void GameEngine::onTimer()
 {
+	qDebug() << "time : " << QTime::currentTime();
 	int msecs = calculateFPS();
 
 	if (msecs > 1000) {
@@ -149,11 +162,17 @@ int GameEngine::calculateFPS()
 	if (frames() % 100 == 0) {
 		setFrames(0);
 		int frames_msecs = m_mediumFPSTime.msecsTo(QTime::currentTime());
+		frames_msecs = qMax(frames_msecs, 1);
 		m_mediumFPSTime = QTime::currentTime();
 		setMediumFSP(1000.0/frames_msecs*100);
 	}
+
 	int timeFrame_msecs = m_lastFrameTime.msecsTo(QTime::currentTime());
+
+	timeFrame_msecs = qMax(timeFrame_msecs, 1);
+
 	m_lastFrameTime = QTime::currentTime();
+
 	setFpsCount(1000/timeFrame_msecs);
 
 	return timeFrame_msecs;
@@ -173,7 +192,6 @@ void GameEngine::moveObjects(int msecs)
 void GameEngine::checkCollisions()
 {
 	foreach (MoveableItem * ball, m_balls) {
-
 		if (m_player->checkCollision(ball))
 			continue;
 
@@ -238,9 +256,10 @@ void GameEngine::resetActiveItems()
 
 	for (int col = 0; col < m_colsCount; col++) {
 		int index = col + (m_rowsCount-1) * m_colsCount;
+
 		ElasticItem * item = m_allItems.at(index);
 		m_activeItems.append(item);
-//		qDebug() << "ACTIVE Item pos (r,c) : " << item->property("row").toInt() << "," << item->property("column").toInt();
+		item->setActive(true);
 	}
 }
 

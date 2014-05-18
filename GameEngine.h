@@ -87,7 +87,7 @@ private:
 	bool m_isDeadly;
 };
 
-class MoveableElasticItem : public MoveableItem//, public ElasticItem
+class MoveableElasticItem : public MoveableItem
 {
 	Q_OBJECT
 public:
@@ -118,8 +118,10 @@ public:
 
 	bool running() const;
 
-	Q_INVOKABLE void start();
-	Q_INVOKABLE void stop();
+	Q_INVOKABLE void start(bool forse = false);
+	Q_INVOKABLE void stop(bool forse = false);
+	Q_INVOKABLE void restartGame();
+
 	Q_INVOKABLE void registerItem(ElasticItem * item);
 
 	Q_INVOKABLE void registerWall(ElasticItem * item);
@@ -230,8 +232,6 @@ private:
 	QList<MoveableItem *> m_balls;
 	MoveableElasticItem * m_player;
 
-//	QQuickItem *m_playfield;
-//	ElasticItem * m_playerElastic;
 	int m_frames;
 	int m_mediumFSP;
 	int m_score;

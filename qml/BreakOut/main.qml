@@ -165,9 +165,7 @@ Rectangle {
 			property int centerX: x + width/2
 			property int centerY: y + height/2
 
-			function step()
-			{
-				x += xSpeed
+				/*x += xSpeed
 				y += ySpeed
 
 				if (x <= 0)
@@ -183,10 +181,7 @@ Rectangle {
 					xSpeed = 0
 					moveTimer.running = false
 					console.log("GAME OVER")
-
-					playfield.resetGame()
-				}
-			}
+				}*/
 
 			function hitOn(posX, posY)
 			{
@@ -250,7 +245,7 @@ Rectangle {
 			ball.y = player.y - ball.height * 2
 			ball.speedX = 100
 			ball.speedY = -100
-			engine.start()
+			engine.restartGame()
 		}
 
 		Keys.onPressed: {
@@ -258,9 +253,18 @@ Rectangle {
 				return
 
 			if (event.text == "R"
-					|| event.text == "r"
-					|| event.key == Qt.Key_Space) {
+					|| event.text == "r") {
 				resetGame ()
+				return
+			}
+
+			if (event.key == Qt.Key_Space) {
+				ball.opacity = 1.0
+				ball.x = player.x + player.width/2
+				ball.y = player.y - ball.height * 2
+				ball.speedX = 100
+				ball.speedY = -100
+				engine.start(true)
 				return
 			}
 
@@ -346,6 +350,12 @@ Rectangle {
 			Text {
 				text: "score: " + engine.score
 			}
+
+			Item { width: 50; height: 50}
+			Text { text: "Instructions: " }
+			Text { text: "Space to start" }
+			Text { text: "R to restart game" }
+			Text { text: "P to pause game" }
 		}
 	}
 
