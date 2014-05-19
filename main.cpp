@@ -25,9 +25,7 @@ int main(int argc, char *argv[])
 
     QtQuick2ApplicationViewer viewer;
 	viewer.rootContext()->setContextProperty("engine", new GameEngine(&viewer));
-//	viewer.setMainQmlFile(QStringLiteral("/qml/BreakOut/main.qml"));
 	viewer.setSource(QUrl("qrc:/qml/BreakOut/main.qml"));
-//	viewer.setSource(QUrl::fromLocalFile(QFileInfo(argv[0]).dir().path()+"/qml/BreakOut/main.qml"));
     viewer.showExpanded();
 
     return app.exec();

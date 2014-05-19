@@ -159,12 +159,12 @@ Rectangle {
 
 		function resetGame ()
 		{
+			engine.restartGame()
 			ball.opacity = 1.0
 			ball.x = player.x + player.width/2
 			ball.y = player.y - ball.height * 2
 			ball.speedX = 100
 			ball.speedY = -100
-			engine.restartGame()
 			engine.lifesCounter--
 		}
 
@@ -232,6 +232,12 @@ Rectangle {
 				return
 			}
 
+			if (event.text == "G"
+					|| event.text == "g") {
+				engine.godMode = !engine.godMode
+				return
+			}
+
 			if (event.text == "S"
 					|| event.text == "s") {
 				engine.setFpsLimit(engine.fpsLimit/2)
@@ -283,77 +289,28 @@ Rectangle {
 		target: engine
 		onGameOver: root.state = "gameover"
 		onBallLosed: root.state = "balllosed"
+		onYouWin: root.state = "youwin"
 	}
 
 	Rectangle {
-		id: welcomeScreen
+		id: infoScreen
 		opacity: 0.0
 		anchors.fill: parent
 
+		property string capture: ""
+		property string content: ""
 		Text {
+			id: textCapture
 			anchors.centerIn: parent
 			font.pointSize: 32
-			text: "Press [Space] to start the game"
-		}
-	}
-
-	Rectangle {
-		id: gameOverScreen
-		opacity: 0.0
-		anchors.fill: parent
-
-		Text {
-			id: textGameOver
-			anchors.centerIn: parent
-			font.pointSize: 32
-			text: "Game Over"
+			text: parent.capture
 		}
 
 		Text {
 			anchors.centerIn: parent
-			anchors.verticalCenterOffset: textGameOver.height
+			anchors.verticalCenterOffset: textCapture.height
 			font.pointSize: 16
-			text: "Press [R] to restart the game"
-		}
-	}
-
-	Rectangle {
-		id: ballLosedScreen
-		opacity: 0.0
-		anchors.fill: parent
-
-		Text {
-			id: textBallLosed
-			anchors.centerIn: parent
-			font.pointSize: 32
-			text: "ball losed"
-		}
-
-		Text {
-			anchors.centerIn: parent
-			anchors.verticalCenterOffset: textPaused.height
-			font.pointSize: 16
-			text: "Press [Space] to try one more time"
-		}
-	}
-
-	Rectangle {
-		id: pauseScreen
-		opacity: 0.0
-		anchors.fill: parent
-
-		Text {
-			id: textPaused
-			anchors.centerIn: parent
-			font.pointSize: 32
-			text: "paused"
-		}
-
-		Text {
-			anchors.centerIn: parent
-			anchors.verticalCenterOffset: textPaused.height
-			font.pointSize: 16
-			text: "Press [P] to continue the game"
+			text: parent.content
 		}
 	}
 
@@ -363,8 +320,10 @@ Rectangle {
 		State {
 			name: "welcome"
 			PropertyChanges {
-				target: welcomeScreen
+				target: infoScreen
 				opacity: 0.95
+				capture: "BreakOut game"
+				content: "Press [Space] to start the game"
 			}
 		},
 		State {
@@ -373,22 +332,37 @@ Rectangle {
 		State {
 			name: "balllosed"
 			PropertyChanges {
-				target: ballLosedScreen
+				target: infoScreen
 				opacity: 0.95
+				capture: "ball losed"
+				content: "Press [Space] to try one more time"
 			}
 		},
 		State {
 			name: "paused"
 			PropertyChanges {
-				target: pauseScreen
+				target: infoScreen
 				opacity: 0.95
+				capture: "paused"
+				content: "Press [P] to continue the game"
 			}
 		},
 		State {
 			name: "gameover"
 			PropertyChanges {
-				target: gameOverScreen
+				target: infoScreen
 				opacity: 0.95
+				capture: "Game Over"
+				content: "Press [R] to restart the game"
+			}
+		},
+		State {
+			name: "youwin"
+			PropertyChanges {
+				target: infoScreen
+				opacity: 0.95
+				capture: "You Win !!"
+				content: "Press [R] to try again"
 			}
 		}
 	]

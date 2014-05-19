@@ -12,6 +12,11 @@ BonusItem::~BonusItem()
 
 }
 
+int BonusItem::bonus() const
+{
+	return m_bonus;
+}
+
 void BonusItem::randomize()
 {
 	int type = qrand() % BonusCount;

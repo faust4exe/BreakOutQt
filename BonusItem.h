@@ -26,18 +26,13 @@ public:
 	explicit BonusItem(QQuickItem *parent = 0);
 	virtual ~BonusItem();
 
-	int bonus() const
-	{
-		return m_bonus;
-	}
-
 	Q_INVOKABLE void randomize();
 
+	int bonus() const;
 	QString text() const;
 
 signals:
 	void bonusChanged(int arg);
-
 	void textChanged(QString arg);
 
 public slots:

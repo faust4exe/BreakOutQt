@@ -21,6 +21,7 @@ GameEngine::GameEngine(QObject *parent)
 	, m_score(0)
 	, m_fpsLimit(100)
 	, m_lifesCounter(4)
+	, m_godMode(false)
 {
 	m_timer.setInterval(1000/m_fpsLimit);
 	m_timer.setSingleShot(false);
@@ -44,10 +45,9 @@ bool GameEngine::running() const
 
 void GameEngine::start(bool forse)
 {
-//	setLifesCounter(lifesCounter()-1);
-
 	if (forse)
 		setRunning(false);
+
 	setRunning(true);
 }
 
@@ -55,6 +55,7 @@ void GameEngine::stop(bool forse)
 {
 	if (forse)
 		setRunning(true);
+
 	setRunning(false);
 }
 
@@ -63,6 +64,10 @@ void GameEngine::restartGame()
 	foreach (ElasticItem * item, m_allItems) {
 		item->setOpacity(1.0);
 		item->setActive(false);
+	}
+
+	foreach (MoveableItem * item, m_balls) {
+		item->setOpacity(0.0);
 	}
 
 	resetActiveItems();
@@ -119,6 +124,11 @@ void GameEngine::setRowsCount(int arg)
 	m_rowsCount = arg;
 }
 
+int GameEngine::frames() const
+{
+	return m_frames;
+}
+
 void GameEngine::setFpsCount(float arg)
 {
 	if (m_fpsCount != arg) {
@@ -143,6 +153,31 @@ void GameEngine::setRunning(bool arg)
 	}
 }
 
+void GameEngine::setFrames(int arg)
+{
+	if (m_frames != arg) {
+		m_frames = arg;
+		emit framesChanged(arg);
+
+	}
+}
+
+void GameEngine::setMediumFSP(int arg)
+{
+	if (m_mediumFSP != arg) {
+		m_mediumFSP = arg;
+		emit mediumFSPChanged(arg);
+	}
+}
+
+void GameEngine::setScore(int arg)
+{
+	if (m_score != arg) {
+		m_score = arg;
+		emit scoreChanged(arg);
+	}
+}
+
 void GameEngine::setFpsLimit(int arg)
 {
 	int newLimit = qMax(15, qMin(1000, arg));
@@ -151,8 +186,14 @@ void GameEngine::setFpsLimit(int arg)
 		emit fpsLimitChanged(newLimit);
 
 		m_timer.setInterval(1000/m_fpsLimit);
+	}
+}
 
-		qDebug() << "FPS limit : " << m_fpsLimit;
+void GameEngine::setLifesCounter(int arg)
+{
+	if (m_lifesCounter != arg) {
+		m_lifesCounter = arg;
+		emit lifesCounterChanged(arg);
 	}
 }
 
@@ -161,7 +202,6 @@ void GameEngine::onTimer()
 	int msecs = calculateFPS();
 
 	if (msecs > 1000) {
-		qDebug() << "Too many msecs";
 		return;
 	}
 
@@ -219,12 +259,33 @@ void GameEngine::checkCollisions()
 		if (ball->opacity() == 0)
 			continue;
 
+		// check ball flew out
+		if (ball->x() < 0) {
+			qDebug() << ball->x() << " " << ball->y();
+			ball->setX(0);
+		}
+		if (ball->y() < 0) {
+			qDebug() << ball->x() << " " << ball->y();
+			ball->setY(0);
+		}
+		if (ball->x() > ball->parentItem()->width()) {
+			qDebug() << ball->x() << " " << ball->y();
+			ball->setX(ball->parentItem()->width() - ball->width());
+		}
+		if (ball->y() > ball->parentItem()->height()) {
+			qDebug() << ball->x() << " " << ball->y();
+			ball->setY(ball->parentItem()->height() - ball->height());
+		}
+
 		if (m_player->checkCollision(ball))
 			continue;
 
 		foreach (ElasticItem * wall, m_walls) {
 			if (wall->checkCollision(ball)) {
 				// ball hitting deadly wall dies
+				if (m_godMode)
+					break;
+
 				if (wall->isDeadly()) {
 					ball->setSpeedX(0);
 					ball->setSpeedY(0);
@@ -341,7 +402,8 @@ void GameEngine::onItemHit(ElasticItem *item)
 
 	// check end of game
 	if (m_activeItems.count() == 0) {
-		qDebug() << "GAME WIN";
+		emit youWin();
+		setRunning(false);
 	}
 
 	// increase speed a little
