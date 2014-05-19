@@ -127,6 +127,9 @@ signals:
 
 	void lifesCounterChanged(int arg);
 
+	void gameOver();
+	void ballLosed();
+
 private slots:
 	void onTimer();
 

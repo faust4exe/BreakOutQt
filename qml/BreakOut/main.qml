@@ -32,7 +32,7 @@ Rectangle {
 
 			Grid {
 				id: grid
-				property int colWidth: 100
+				property int colWidth: 50
 				property int rowHeight: 25
 
 				property int colsCount: (field.width+spacing)/(colWidth+spacing)
@@ -165,6 +165,7 @@ Rectangle {
 			ball.speedX = 100
 			ball.speedY = -100
 			engine.restartGame()
+			engine.lifesCounter--
 		}
 
 		Keys.onPressed: {
@@ -173,7 +174,10 @@ Rectangle {
 
 			if (event.text == "R"
 					|| event.text == "r") {
+
+				root.state = "playing"
 				resetGame ()
+				engine.start(true)
 				return
 			}
 
@@ -190,8 +194,12 @@ Rectangle {
 			}
 
 			if (event.key == Qt.Key_Space) {
-				if (engine.lifesCounter == 0)
+				if (root.state != "welcome"
+						&& root.state != "balllosed")
 					return
+
+				engine.lifesCounter--
+				root.state = "playing"
 				ball.opacity = 1.0
 				ball.x = player.x + player.width/2
 				ball.y = player.y - ball.height * 2
@@ -201,22 +209,20 @@ Rectangle {
 				return
 			}
 
-			if (event.text == "X"
-					|| event.text == "x") {
-				if (engine.running)
-					engine.stop()
-				else
-					engine.start()
-				return
-			}
-
 			if (event.text == "P"
 					|| event.text == "p") {
-				ball.opacity = 1.0
-				if (engine.running)
+				if (root.state != "paused" &&
+						root.state != "playing")
+					return
+
+				if (engine.running) {
+					root.state = "paused"
 					engine.stop()
-				else
+				}
+				else {
+					root.state = "playing"
 					engine.start()
+				}
 				return
 			}
 
@@ -234,12 +240,10 @@ Rectangle {
 
 			if (event.key == Qt.Key_Left) {
 				player.speedX = -player.moveSpeed
-				event.accepted = true
 			}
 
 			if (event.key == Qt.Key_Right) {
 				player.speedX = player.moveSpeed
-				event.accepted = true
 			}
 		}
 
@@ -257,6 +261,8 @@ Rectangle {
 			anchors.fill: parent
 			hoverEnabled: true
 			onMouseXChanged: {
+				if (!engine.running)
+					return
 				var newPos = mouseX - player.width/2
 				newPos = Math.min(newPos, playfield.width - player.width)
 				player.x = Math.max(0, newPos)
@@ -268,8 +274,122 @@ Rectangle {
 		id: infoPanel
 
 		height: parent.height
-		width: 250
+		width: 230
 
 		anchors.right: parent.right
 	}
+
+	Connections {
+		target: engine
+		onGameOver: root.state = "gameover"
+		onBallLosed: root.state = "balllosed"
+	}
+
+	Rectangle {
+		id: welcomeScreen
+		opacity: 0.0
+		anchors.fill: parent
+
+		Text {
+			anchors.centerIn: parent
+			font.pointSize: 32
+			text: "Press [Space] to start the game"
+		}
+	}
+
+	Rectangle {
+		id: gameOverScreen
+		opacity: 0.0
+		anchors.fill: parent
+
+		Text {
+			id: textGameOver
+			anchors.centerIn: parent
+			font.pointSize: 32
+			text: "Game Over"
+		}
+
+		Text {
+			anchors.centerIn: parent
+			anchors.verticalCenterOffset: textGameOver.height
+			font.pointSize: 16
+			text: "Press [R] to restart the game"
+		}
+	}
+
+	Rectangle {
+		id: ballLosedScreen
+		opacity: 0.0
+		anchors.fill: parent
+
+		Text {
+			id: textBallLosed
+			anchors.centerIn: parent
+			font.pointSize: 32
+			text: "ball losed"
+		}
+
+		Text {
+			anchors.centerIn: parent
+			anchors.verticalCenterOffset: textPaused.height
+			font.pointSize: 16
+			text: "Press [Space] to try one more time"
+		}
+	}
+
+	Rectangle {
+		id: pauseScreen
+		opacity: 0.0
+		anchors.fill: parent
+
+		Text {
+			id: textPaused
+			anchors.centerIn: parent
+			font.pointSize: 32
+			text: "paused"
+		}
+
+		Text {
+			anchors.centerIn: parent
+			anchors.verticalCenterOffset: textPaused.height
+			font.pointSize: 16
+			text: "Press [P] to continue the game"
+		}
+	}
+
+	Component.onCompleted: state = "welcome"
+
+	states: [
+		State {
+			name: "welcome"
+			PropertyChanges {
+				target: welcomeScreen
+				opacity: 0.95
+			}
+		},
+		State {
+			name: "playing"
+		},
+		State {
+			name: "balllosed"
+			PropertyChanges {
+				target: ballLosedScreen
+				opacity: 0.95
+			}
+		},
+		State {
+			name: "paused"
+			PropertyChanges {
+				target: pauseScreen
+				opacity: 0.95
+			}
+		},
+		State {
+			name: "gameover"
+			PropertyChanges {
+				target: gameOverScreen
+				opacity: 0.95
+			}
+		}
+	]
 }

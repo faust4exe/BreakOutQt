@@ -9,18 +9,18 @@
 
 GameEngine::GameEngine(QObject *parent)
 	: QObject(parent)
-	, m_lastFrameTime(QTime::currentTime())
-	, m_mediumFPSTime(QTime::currentTime())
+	, m_lastFrameTime(QTime())
+	, m_mediumFPSTime(QTime())
 	, m_fpsCount(0)
 	, m_running(false)
 	, m_rowsCount(0)
 	, m_colsCount(0)
 	, m_player(0)
 	, m_frames(0)
-	, m_mediumFSP(60)
+	, m_mediumFSP(100)
 	, m_score(0)
-	, m_fpsLimit(60)
-	, m_lifesCounter(3)
+	, m_fpsLimit(100)
+	, m_lifesCounter(4)
 {
 	m_timer.setInterval(1000/m_fpsLimit);
 	m_timer.setSingleShot(false);
@@ -44,7 +44,7 @@ bool GameEngine::running() const
 
 void GameEngine::start(bool forse)
 {
-	setLifesCounter(lifesCounter()-1);
+//	setLifesCounter(lifesCounter()-1);
 
 	if (forse)
 		setRunning(false);
@@ -67,7 +67,8 @@ void GameEngine::restartGame()
 
 	resetActiveItems();
 
-	setLifesCounter(3);
+	setLifesCounter(4);
+	setScore(0);
 }
 
 void GameEngine::registerItem(ElasticItem *item)
@@ -135,16 +136,19 @@ void GameEngine::setRunning(bool arg)
 
 		if (m_running)
 			m_timer.start();
-		else
+		else {
 			m_timer.stop();
+			m_lastFrameTime = QTime();
+		}
 	}
 }
 
 void GameEngine::setFpsLimit(int arg)
 {
-	if (m_fpsLimit != arg) {
-		m_fpsLimit = arg;
-		emit fpsLimitChanged(arg);
+	int newLimit = qMax(15, qMin(1000, arg));
+	if (m_fpsLimit != newLimit) {
+		m_fpsLimit = newLimit;
+		emit fpsLimitChanged(newLimit);
 
 		m_timer.setInterval(1000/m_fpsLimit);
 
@@ -154,7 +158,6 @@ void GameEngine::setFpsLimit(int arg)
 
 void GameEngine::onTimer()
 {
-	QTime start = QTime::currentTime();
 	int msecs = calculateFPS();
 
 	if (msecs > 1000) {
@@ -165,7 +168,6 @@ void GameEngine::onTimer()
 	moveObjects(msecs);
 
 	checkCollisions();
-	qDebug() << "frame in " << start.msecsTo(QTime::currentTime());
 }
 
 int GameEngine::calculateFPS()
@@ -229,7 +231,11 @@ void GameEngine::checkCollisions()
 					ball->setOpacity(0);
 
 					if (lifesCounter() == 0)
-						qDebug() << "GAME OVER";
+						emit gameOver();
+					else {
+						if (getActiveBall() == 0)
+							emit ballLosed();
+					}
 				}
 				break;
 			}
@@ -382,14 +388,15 @@ void GameEngine::applyBonus(BonusItem *bonusItem)
 		int counter = 0;
 		double theSpeed = sqrt(pow(genericBall->speedX(), 2)
 							 + pow(genericBall->speedY(), 2));
+		double randomAngle = qrand() % 360;
 		foreach (MoveableItem * ball, m_balls) {
 			if (ball != genericBall) {
 				ball->setX(genericBall->x());
 				ball->setY(genericBall->y());
 			}
 
-			ball->setSpeedX(theSpeed * sin(3.1415*2*counter/m_balls.count()));
-			ball->setSpeedY(theSpeed * cos(3.1415*2*counter/m_balls.count()));
+			ball->setSpeedX(theSpeed * sin(3.1415*2*randomAngle/360.0 + 3.1415*2*counter/m_balls.count()));
+			ball->setSpeedY(theSpeed * cos(3.1415*2*randomAngle/360.0 + 3.1415*2*counter/m_balls.count()));
 			ball->setOpacity(1.0);
 			counter++;
 		}

@@ -3,5 +3,9 @@
         <file>qml/BreakOut/InfoPanel.qml</file>
         <file>qml/BreakOut/main.qml</file>
         <file>qml/BreakOut/Wall.qml</file>
+        <file>qml/BreakOut/BallItem.qml</file>
+        <file>qml/BreakOut/Bonus.qml</file>
+        <file>qml/BreakOut/Brick.qml</file>
+        <file>qml/BreakOut/PlayerItem.qml</file>
     </qresource>
 </RCC>
