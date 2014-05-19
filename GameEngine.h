@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QQuickItem>
 
+class BonusItem;
 class MoveableItem;
 class ElasticItem;
 class MoveableElasticItem;
@@ -20,6 +21,7 @@ class GameEngine : public QObject
 	Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
 	Q_PROPERTY(int score READ score WRITE setScore NOTIFY scoreChanged)
 	Q_PROPERTY(int fpsLimit READ fpsLimit WRITE setFpsLimit NOTIFY fpsLimitChanged)
+	Q_PROPERTY(int lifesCounter READ lifesCounter WRITE setLifesCounter NOTIFY lifesCounterChanged)
 public:
 	explicit GameEngine(QObject *parent);
 	virtual ~GameEngine();
@@ -37,6 +39,8 @@ public:
 	Q_INVOKABLE void registerWall(ElasticItem * item);
 
 	Q_INVOKABLE void registerBall(MoveableItem * item);
+
+	Q_INVOKABLE void registerBonus(BonusItem * item);
 
 	Q_INVOKABLE void registerPlayer(MoveableElasticItem * item);
 
@@ -61,6 +65,11 @@ public:
 	int fpsLimit() const
 	{
 		return m_fpsLimit;
+	}
+
+	int lifesCounter() const
+	{
+		return m_lifesCounter;
 	}
 
 public slots:
@@ -95,6 +104,14 @@ public slots:
 
 	void setFpsLimit(int arg);
 
+	void setLifesCounter(int arg)
+	{
+		if (m_lifesCounter != arg) {
+			m_lifesCounter = arg;
+			emit lifesCounterChanged(arg);
+		}
+	}
+
 signals:
 	void fpsCountChanged(float arg);
 
@@ -108,6 +125,8 @@ signals:
 
 	void fpsLimitChanged(int arg);
 
+	void lifesCounterChanged(int arg);
+
 private slots:
 	void onTimer();
 
@@ -120,7 +139,11 @@ private:
 
 	void resetActiveItems();
 
-	void onItemHit();
+	void onItemHit(ElasticItem * item);
+
+	void applyBonus(BonusItem *bonusItem);
+
+	MoveableItem * getActiveBall();
 
 	ElasticItem *itemAt(int row, int col);
 
@@ -139,6 +162,7 @@ private:
 
 	QList<ElasticItem *> m_walls;
 
+	QList<BonusItem *> m_bonus;
 	QList<MoveableItem *> m_balls;
 	MoveableElasticItem * m_player;
 
@@ -146,6 +170,7 @@ private:
 	int m_mediumFSP;
 	int m_score;
 	int m_fpsLimit;
+	int m_lifesCounter;
 };
 
 #endif // GAMEENGINE_H

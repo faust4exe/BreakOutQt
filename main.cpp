@@ -7,6 +7,7 @@
 #include "GameEngine.h"
 #include <MoveableItem.h>
 #include <ElasticItem.h>
+#include <BonusItem.h>
 #include <MoveableElasticItem.h>
 
 int main(int argc, char *argv[])
@@ -30,6 +31,8 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
+
+	qmlRegisterType<BonusItem>("GameEngine", 1, 0, "BonusItem");
 	qmlRegisterType<MoveableItem>("GameEngine", 1, 0, "MoveableItem");
 	qmlRegisterType<ElasticItem>("GameEngine", 1, 0, "ElasticItem");
 	qmlRegisterType<MoveableElasticItem>("GameEngine", 1, 0, "MoveableElasticItem");

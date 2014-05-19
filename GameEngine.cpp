@@ -1,7 +1,7 @@
 #include "GameEngine.h"
 
 #include <QDebug>
-
+#include <BonusItem.h>
 #include <ElasticItem.h>
 #include <MoveableItem.h>
 #include <MoveableElasticItem.h>
@@ -20,6 +20,7 @@ GameEngine::GameEngine(QObject *parent)
 	, m_mediumFSP(60)
 	, m_score(0)
 	, m_fpsLimit(60)
+	, m_lifesCounter(3)
 {
 	m_timer.setInterval(1000/m_fpsLimit);
 	m_timer.setSingleShot(false);
@@ -44,6 +45,8 @@ bool GameEngine::running() const
 
 void GameEngine::start(bool forse)
 {
+	setLifesCounter(lifesCounter()-1);
+
 	if (forse)
 		setRunning(false);
 	setRunning(true);
@@ -64,6 +67,8 @@ void GameEngine::restartGame()
 	}
 
 	resetActiveItems();
+
+	setLifesCounter(3);
 }
 
 void GameEngine::registerItem(ElasticItem *item)
@@ -86,6 +91,11 @@ void GameEngine::registerWall(ElasticItem *item)
 void GameEngine::registerBall(MoveableItem *item)
 {
 	m_balls.append(item);
+}
+
+void GameEngine::registerBonus(BonusItem *item)
+{
+	m_bonus.append(item);
 }
 
 void GameEngine::registerPlayer(MoveableElasticItem *item)
@@ -187,6 +197,10 @@ void GameEngine::moveObjects(int msecs)
 	if (m_player)
 		m_player->step(msecs);
 
+	foreach (MoveableItem *bonus, m_bonus) {
+		bonus->step(msecs);
+	}
+
 	foreach (MoveableItem *ball, m_balls) {
 		ball->step(msecs);
 	}
@@ -198,31 +212,64 @@ void GameEngine::checkCollisions()
 	m_player->setX(qMin((int)m_player->parentItem()->width() - (int)m_player->width(),
 						(int)m_player->x()));
 
+	// collision on balls with player and walls
 	foreach (MoveableItem * ball, m_balls) {
+		if (ball->opacity() == 0)
+			continue;
+
 		if (m_player->checkCollision(ball))
 			continue;
 
 		foreach (ElasticItem * wall, m_walls) {
 			if (wall->checkCollision(ball)) {
-				// here logic of hit
+				// ball hitting deadly wall dies
 				if (wall->isDeadly()) {
 					ball->setSpeedX(0);
 					ball->setSpeedY(0);
-					ball->setOpacity(0.1);
+					ball->setOpacity(0);
+
+					if (lifesCounter() == 0)
+						qDebug() << "GAME OVER";
 				}
 				break;
 			}
+		}
+	}
 
-			int z = 0;
-			z++;
+	// collisions of bonus with player and walls
+	foreach (BonusItem *bonus, m_bonus) {
+		if (bonus->opacity() == 0)
+			continue;
+
+		if (m_player->checkCollision(bonus)) {
+			bonus->setSpeedX(0);
+			bonus->setSpeedY(0);
+			bonus->setOpacity(0.0);
+			applyBonus(bonus);
+			continue;
 		}
 
-		int z1 = 0;
-		z1++;
+		foreach (ElasticItem * wall, m_walls) {
+			if (wall->checkCollision(bonus)) {
+				// ball hitting deadly wall dies
+				if (wall->isDeadly()) {
+					bonus->setSpeedX(0);
+					bonus->setSpeedY(0);
+					bonus->setOpacity(0.0);
+				}
+				break;
+			}
+		}
 	}
 
 	foreach (MoveableItem * ball, m_balls) {
+		if (ball->opacity() == 0)
+			continue;
+
 		foreach (ElasticItem * item, m_activeItems) {
+			if (item->opacity() == 0)
+				continue;
+
 			const int row = item->property("row").toInt();
 			const int col = item->property("column").toInt();
 
@@ -261,20 +308,11 @@ void GameEngine::checkCollisions()
 					newActive->setActive(true);
 				}
 
-				onItemHit();
+				onItemHit(item);
 				break;
 			}
-
-			int z = 0;
-			z++;
 		}
-
-		int z1 = 0;
-		z1++;
 	}
-
-	int z1 = 0;
-	z1++;
 }
 
 void GameEngine::resetActiveItems()
@@ -290,22 +328,95 @@ void GameEngine::resetActiveItems()
 	}
 }
 
-void GameEngine::onItemHit()
+void GameEngine::onItemHit(ElasticItem *item)
 {
 	// score ++
 	setScore(score()+1);
 
-	qDebug() << "active: " << m_activeItems.count();
 	// check end of game
 	if (m_activeItems.count() == 0) {
 		qDebug() << "GAME WIN";
 	}
 
+	// increase speed a little
 	foreach (MoveableItem * ball, m_balls) {
 		ball->setSpeedX(ball->speedX()*1.01);
 		ball->setSpeedY(ball->speedY()*1.01);
 	}
 
+	// check if bonus accessible
+	foreach (BonusItem * bonusItem, m_bonus) {
+		if (bonusItem->opacity() == 0) {
+
+			if (qrand() % 100 < 50) {
+				bonusItem->setX(item->x()+item->width()/2);
+				bonusItem->setY(item->y()+item->height()/2);
+				bonusItem->randomize();
+				bonusItem->setOpacity(1.0);
+				bonusItem->setSpeedY(75);
+			}
+		}
+	}
+}
+
+void GameEngine::applyBonus(BonusItem *bonusItem)
+{
+	switch (bonusItem->bonus()) {
+	case BonusItem::BiggerPlayer:
+		m_player->setWidth(m_player->width()*1.5);
+		break;
+	case BonusItem::SlowerBall:
+		foreach (MoveableItem * ball, m_balls) {
+			ball->setSpeedX(ball->speedX()*0.75);
+			ball->setSpeedY(ball->speedY()*0.75);
+		}
+		break;
+	case BonusItem::ExtraLife:
+		setLifesCounter(lifesCounter()+1);
+		break;
+	case BonusItem::MegaBall: {
+		MoveableItem * genericBall = getActiveBall();
+		if (genericBall == 0)
+			return;
+
+		int counter = 0;
+		double theSpeed = sqrt(pow(genericBall->speedX(), 2)
+							 + pow(genericBall->speedY(), 2));
+		foreach (MoveableItem * ball, m_balls) {
+			if (ball != genericBall) {
+				ball->setX(genericBall->x());
+				ball->setY(genericBall->y());
+			}
+
+			ball->setSpeedX(theSpeed * sin(3.1415*2*counter/m_balls.count()));
+			ball->setSpeedY(theSpeed * cos(3.1415*2*counter/m_balls.count()));
+			ball->setOpacity(1.0);
+			counter++;
+		}
+		break;
+	}
+	case BonusItem::SmallerPlayer:
+		m_player->setWidth(m_player->width()*0.75);
+		break;
+	case BonusItem::FasterBall:
+		foreach (MoveableItem * ball, m_balls) {
+			ball->setSpeedX(ball->speedX()*1.25);
+			ball->setSpeedY(ball->speedY()*1.25);
+		}
+		break;
+	case BonusItem::MinusLife:
+		setLifesCounter(qMax(0,lifesCounter()-1));
+		break;
+	}
+}
+
+MoveableItem *GameEngine::getActiveBall()
+{
+	foreach (MoveableItem * ball, m_balls) {
+		if (ball->opacity() == 1.0)
+			return ball;
+	}
+	return 0;
 }
 
 ElasticItem *GameEngine::itemAt(int row, int col)

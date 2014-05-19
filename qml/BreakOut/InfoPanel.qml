@@ -18,6 +18,23 @@ Rectangle {
 		Text {
 			text: "score: " + engine.score
 		}
+		Text {
+			text: "lifes: "
+		}
+		Row {
+			spacing: 5
+			Repeater {
+				model: engine.lifesCounter
+
+				Rectangle {
+					width: 15
+					height: width
+					radius: width/2
+					color: "green"
+				}
+			}
+		}
+
 		
 		Item { width: 50; height: 50}
 		Text { text: "Instructions: " }

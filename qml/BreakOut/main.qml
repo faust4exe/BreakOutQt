@@ -72,31 +72,30 @@ Rectangle {
 						property int column: index % grid.colsCount
 
 						Component.onCompleted: engine.registerItem(itemRect)
-
-					/*Item {
-							id: itemDetector
-
-							Connections {
-								target: ball
-								onCheckCollision: {
-									if (itemRect.opacity == 0)
-										return
-
-									var ballOnPlayer = itemDetector.mapFromItem(playfield, senderX, senderY)
-
-									if (itemDetector.contains(Qt.point(ballOnPlayer.x, ballOnPlayer.y))) {
-
-										sender.ySpeed = Math.abs(sender.ySpeed)
-
-										itemRect.opacity = 0.0
-									}
-								}
-							}
-
-						}*/
 					}
 				}
 			}
+		}
+
+		// bonus
+		BonusItem {
+			id: bonusItem
+			width: 25
+			height: width
+			opacity: 0
+
+			Rectangle {
+				anchors.fill: parent
+				radius: width/4
+				color: bonusItem.bonus > 3 ? "red" : "green"
+
+				Text {
+					anchors.centerIn: parent
+					text: bonusItem.text
+				}
+			}
+
+			Component.onCompleted: engine.registerBonus(bonusItem)
 		}
 
 		//walls
@@ -139,31 +138,32 @@ Rectangle {
 			anchors.leftMargin: -5
 		}
 
-		MoveableItem {
+		// balls
+		BallItem {
 			id: ball
 
-			opacity: 0.0
 			width: 50/2
 			height: width
 
-			Component.onCompleted: engine.registerBall(ball)
-
-			Rectangle {
-				anchors.fill: parent
-				color: "grey"
-				radius: width/2
-			}
+			x: playfield.width/2
+			y: playfield.height - player.height * 2
+		}
+		BallItem {
+			width: 50/2
+			height: width
 
 			x: playfield.width/2
 			y: playfield.height - player.height * 2
+		}
+		BallItem {
+			width: 50/2
+			height: width
 
-			signal checkCollision(var sender, int senderX, int senderY)
-
-			speedX: 100*2
-			speedY: -100*2
+			x: playfield.width/2
+			y: playfield.height - player.height * 2
 		}
 
-		MoveableElasticItem {
+		PlayerItem {
 			id: player
 
 			x: parent.height/2
@@ -174,13 +174,6 @@ Rectangle {
 			anchors.bottomMargin: playfield.border.width
 
 			property int moveSpeed: 500
-
-			Component.onCompleted: engine.registerPlayer(player)
-
-			Rectangle {
-				anchors.fill: parent
-				color: "black"
-			}
 		}
 
 		function resetGame ()
@@ -216,6 +209,8 @@ Rectangle {
 			}
 
 			if (event.key == Qt.Key_Space) {
+				if (engine.lifesCounter == 0)
+					return
 				ball.opacity = 1.0
 				ball.x = player.x + player.width/2
 				ball.y = player.y - ball.height * 2

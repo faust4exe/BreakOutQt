@@ -12,7 +12,8 @@ SOURCES += main.cpp \
     MoveableItem.cpp \
     MoveableElasticItem.cpp \
     ElasticItem.cpp \
-    PlayerElasticItem.cpp
+    PlayerElasticItem.cpp \
+    BonusItem.cpp
 
 # Installation path
 # target.path =
@@ -26,7 +27,8 @@ HEADERS += \
     MoveableItem.h \
     MoveableElasticItem.h \
     ElasticItem.h \
-    PlayerElasticItem.h
+    PlayerElasticItem.h \
+    BonusItem.h
 
 RESOURCES += \
     resource.qrc
