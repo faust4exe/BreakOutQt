@@ -10,7 +10,10 @@ Rectangle {
 			text: "fps:   " + engine.fpsCount
 		}
 		Text {
-			text: "mfps:   " + engine.mediumFSP
+			text: "medium fps:   " + engine.mediumFSP
+		}
+		Text {
+			text: "fps limit:   " + engine.fpsLimit
 		}
 		Text {
 			text: "frames: " + engine.frames

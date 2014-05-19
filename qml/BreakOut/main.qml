@@ -52,18 +52,8 @@ Rectangle {
 				Repeater {
 					model: grid.rowsCount * grid.colsCount
 
-					ElasticItem {
-						id: itemRect
-
-						Rectangle {
-							anchors.fill: parent
-							color:  {
-								var yGlobal = itemRect.mapToItem(grid, itemRect.x, itemRect.y).y
-								return Qt.hsla(yGlobal/playfield.height, 1, 0.5, 1)
-							}
-							border.color: "black"
-							border.width: itemRect.active ? 5 : 1
-						}
+					Brick {
+						id: brick
 
 						width: grid.colWidth
 						height: grid.rowHeight
@@ -71,31 +61,22 @@ Rectangle {
 						property int row: index / grid.colsCount
 						property int column: index % grid.colsCount
 
-						Component.onCompleted: engine.registerItem(itemRect)
+						itemColor:{
+							var yGlobal = root.mapToItem(grid, brick.x, brick.y).y
+							return Qt.hsla(yGlobal/grid.height, 1, 0.5, 1)
+						}
 					}
 				}
 			}
 		}
 
 		// bonus
-		BonusItem {
+		Bonus {
 			id: bonusItem
+
 			width: 25
 			height: width
 			opacity: 0
-
-			Rectangle {
-				anchors.fill: parent
-				radius: width/4
-				color: bonusItem.bonus > 3 ? "red" : "green"
-
-				Text {
-					anchors.centerIn: parent
-					text: bonusItem.text
-				}
-			}
-
-			Component.onCompleted: engine.registerBonus(bonusItem)
 		}
 
 		//walls

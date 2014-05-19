@@ -45,6 +45,5 @@ void BonusItem::setBonus(int arg)
 		m_bonus = arg;
 		emit bonusChanged(arg);
 		emit textChanged(text());
-		qDebug() << "new type : " << arg;
 	}
 }

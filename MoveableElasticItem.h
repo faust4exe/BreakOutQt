@@ -3,7 +3,6 @@
 
 #include <QObject>
 #include <MoveableItem.h>
-//#include <ElasticItem.h>
 #include <PlayerElasticItem.h>
 
 class MoveableElasticItem : public MoveableItem

@@ -30,7 +30,6 @@ GameEngine::GameEngine(QObject *parent)
 
 GameEngine::~GameEngine()
 {
-	qDebug() << Q_FUNC_INFO;
 }
 
 float GameEngine::fpsCount() const
@@ -155,7 +154,7 @@ void GameEngine::setFpsLimit(int arg)
 
 void GameEngine::onTimer()
 {
-//	qDebug() << "time : " << QTime::currentTime();
+	QTime start = QTime::currentTime();
 	int msecs = calculateFPS();
 
 	if (msecs > 1000) {
@@ -166,6 +165,7 @@ void GameEngine::onTimer()
 	moveObjects(msecs);
 
 	checkCollisions();
+	qDebug() << "frame in " << start.msecsTo(QTime::currentTime());
 }
 
 int GameEngine::calculateFPS()
