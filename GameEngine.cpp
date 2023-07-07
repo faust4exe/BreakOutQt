@@ -416,7 +416,7 @@ void GameEngine::onItemHit(ElasticItem *item)
 	foreach (BonusItem * bonusItem, m_bonus) {
 		if (bonusItem->opacity() == 0) {
 
-			if (qrand() % 100 < 50) {
+            if (rand() % 100 < 50) {
 				bonusItem->setX(item->x()+item->width()/2);
 				bonusItem->setY(item->y()+item->height()/2);
 				bonusItem->randomize();
@@ -450,7 +450,7 @@ void GameEngine::applyBonus(BonusItem *bonusItem)
 		int counter = 0;
 		double theSpeed = sqrt(pow(genericBall->speedX(), 2)
 							 + pow(genericBall->speedY(), 2));
-		double randomAngle = qrand() % 360;
+        double randomAngle = rand() % 360;
 		foreach (MoveableItem * ball, m_balls) {
 			if (ball != genericBall) {
 				ball->setX(genericBall->x());

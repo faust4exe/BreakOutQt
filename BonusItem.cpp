@@ -19,7 +19,7 @@ int BonusItem::bonus() const
 
 void BonusItem::randomize()
 {
-	int type = qrand() % BonusCount;
+    int type = rand() % BonusCount;
 	setBonus(type);
 }
 

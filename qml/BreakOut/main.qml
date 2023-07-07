@@ -168,7 +168,19 @@ Rectangle {
 			engine.lifesCounter--
 		}
 
-		Keys.onPressed: {
+        function startGame()
+        {
+            engine.lifesCounter--
+            root.state = "playing"
+            ball.opacity = 1.0
+            ball.x = player.x + player.width/2
+            ball.y = player.y - ball.height * 2
+            ball.speedX = 100
+            ball.speedY = -100
+            engine.start(true)
+        }
+
+        Keys.onPressed: function(event) {
 			if (event.isAutoRepeat)
 				return
 
@@ -176,7 +188,7 @@ Rectangle {
 					|| event.text == "r") {
 
 				root.state = "playing"
-				resetGame ()
+                playfield.resetGame()
 				engine.start(true)
 				return
 			}
@@ -198,14 +210,7 @@ Rectangle {
 						&& root.state != "balllosed")
 					return
 
-				engine.lifesCounter--
-				root.state = "playing"
-				ball.opacity = 1.0
-				ball.x = player.x + player.width/2
-				ball.y = player.y - ball.height * 2
-				ball.speedX = 100
-				ball.speedY = -100
-				engine.start(true)
+                playfield.startGame()
 				return
 			}
 
@@ -253,7 +258,7 @@ Rectangle {
 			}
 		}
 
-		Keys.onReleased: {
+        Keys.onReleased: function(event) {
 			if (event.isAutoRepeat)
 				return
 
@@ -273,6 +278,20 @@ Rectangle {
 				newPos = Math.min(newPos, playfield.width - player.width)
 				player.x = Math.max(0, newPos)
 			}
+            onPressed: {
+                if (root.state == "welcome"
+                        || root.state == "balllosed") {
+                    playfield.startGame()
+                    return
+                }
+                if (root.state == "gameover") {
+
+                    root.state = "playing"
+                    playfield.resetGame()
+                    engine.start(true)
+                    return
+                }
+            }
 		}
 	}
 
@@ -287,9 +306,9 @@ Rectangle {
 
 	Connections {
 		target: engine
-		onGameOver: root.state = "gameover"
-		onBallLosed: root.state = "balllosed"
-		onYouWin: root.state = "youwin"
+        function onGameOver(){ root.state = "gameover" }
+        function onBallLosed(){ root.state = "balllosed" }
+        function onYouWin(){ root.state = "youwin" }
 	}
 
 	Rectangle {
