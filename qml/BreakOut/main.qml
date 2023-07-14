@@ -306,7 +306,8 @@ Rectangle {
                     playfield.startGame()
                     return
                 }
-                if (root.state == "gameover") {
+                if (root.state == "gameover"
+                        || root.state == "youwin") {
 
                     root.state = "playing"
                     playfield.resetGame()
