@@ -19,18 +19,15 @@ bool PlayerElasticItem::checkCollision(MoveableItem *item)
 		return false;
 
 	QPoint ballCenter = item->centerPoint();
-	QPoint mappedCenter = mapFromItem(item->parentItem(), ballCenter).toPoint();
-	ballCenter = mappedCenter;
-
 	int depth = item->width()/2;
-	QRect detector(-depth,
-				   -depth,
+    QRect detector(-depth + x(),
+                   -depth + y(),
 				   width() + depth,
 				   height() + depth);
 
 	if (detector.contains(ballCenter, true)) {
-		double posX = width()/2.0;
-		double posY = height()/2.0;
+        double posX = x() + width()/2.0;
+        double posY = y() + height()/2.0;
 
 		double xdiff = ballCenter.x() - posX;
 		double ydiff = posY - ballCenter.y();
