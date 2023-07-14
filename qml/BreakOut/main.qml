@@ -4,7 +4,7 @@ import GameEngine 1.0
 Rectangle {
 	id: root
 
-	width: 800
+    width: 800
 	height: 600
 
     readonly property bool isVertical: height > width
@@ -72,7 +72,7 @@ Rectangle {
 				spacing: 5
 
 				Repeater {
-					model: grid.rowsCount * grid.colsCount
+                    model: grid.rowsCount * grid.colsCount
 
 					Brick {
 						id: brick

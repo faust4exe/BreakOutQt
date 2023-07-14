@@ -85,7 +85,7 @@ void GameEngine::registerItem(ElasticItem *item)
 	if (row == m_rowsCount - 1) {
 		m_activeItems.append(item);
 		item->setActive(true);
-	}
+    }
 }
 
 void GameEngine::unregisterItem(ElasticItem *item)
