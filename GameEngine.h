@@ -36,6 +36,7 @@ public:
 	Q_INVOKABLE void restartGame();
 
 	Q_INVOKABLE void registerItem(ElasticItem * item);
+    Q_INVOKABLE void unregisterItem(ElasticItem * item);
 	Q_INVOKABLE void registerWall(ElasticItem * item);
 	Q_INVOKABLE void registerBall(MoveableItem * item);
 	Q_INVOKABLE void registerBonus(BonusItem * item);

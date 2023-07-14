@@ -15,4 +15,5 @@ ElasticItem {
 	}
 
 	Component.onCompleted: engine.registerItem(root)
+    Component.onDestruction: engine.unregisterItem(root)
 }

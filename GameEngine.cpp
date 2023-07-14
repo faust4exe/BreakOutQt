@@ -88,6 +88,12 @@ void GameEngine::registerItem(ElasticItem *item)
 	}
 }
 
+void GameEngine::unregisterItem(ElasticItem *item)
+{
+    m_allItems.removeAll(item);
+    m_activeItems.removeAll(item);
+}
+
 void GameEngine::registerWall(ElasticItem *item)
 {
 	m_walls.append(item);
