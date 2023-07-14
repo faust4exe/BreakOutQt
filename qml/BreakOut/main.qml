@@ -7,13 +7,35 @@ Rectangle {
 	width: 800
 	height: 600
 
+    readonly property bool isVertical: height > width
+
+    Item {
+        id: orientationStateHolder
+        states: [
+            State {
+                name: "verticalOrientation"
+                when: root.isVertical
+                PropertyChanges {
+                    target: playfield
+                    anchors.right: root.right
+                    anchors.top: infoPanel.bottom
+                }
+                PropertyChanges {
+                    target: infoPanel
+                    anchors.left: root.left
+                    height: 160
+                }
+            }
+        ]
+    }
+
 	Rectangle {
 		id: playfield
 
 		anchors.top: parent.top
 		anchors.left: parent.left
-		height: parent.height
-		width: parent.width - infoPanel.width
+        anchors.bottom: parent.bottom
+        anchors.right: infoPanel.left
 
 		border.color: "black"
 		border.width: 5
@@ -301,7 +323,7 @@ Rectangle {
 		height: parent.height
 		width: 230
 
-		anchors.right: parent.right
+        anchors.right: root.right
 	}
 
 	Connections {
